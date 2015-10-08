@@ -24,13 +24,12 @@ class KetamaRing extends HashRing
     const DEFAULT_REPLICAS = 160;
 
     /**
+     * @param int   $replicas         Number of replicas in the ring.
      * @param mixed $nodeHashCallback Callback returning a string used to calculate the hash of nodes.
      */
-    public function __construct($nodeHashCallback = null)
-    {
-        parent::__construct($this::DEFAULT_REPLICAS, $nodeHashCallback);
+    public function __construct($replicas = self::DEFAULT_REPLICAS, $nodeHashCallback = null){
+      parent::__construct($replicas, $nodeHashCallback);
     }
-
     /**
      * {@inheritdoc}
      */
@@ -38,14 +37,12 @@ class KetamaRing extends HashRing
     {
         $nodeObject = $node['object'];
         $nodeHash = $this->getNodeHash($nodeObject);
-        $replicas = (int) floor($weightRatio * $totalNodes * ($replicas / 4));
+        $replicas = (int) floor($weightRatio * $totalNodes * $replicas);
 
         for ($i = 0; $i < $replicas; ++$i) {
-            $unpackedDigest = unpack('V4', md5("$nodeHash-$i", true));
+            $key = $this->hash("$nodeHash-$i");
+            $ring[$key] = $nodeObject;
 
-            foreach ($unpackedDigest as $key) {
-                $ring[$key] = $nodeObject;
-            }
         }
     }
 
